@@ -1,31 +1,54 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Pressable, ScrollView } from 'react-native';
-import AddItem from './AddItem';
+import { StyleSheet, Text, View, Pressable, ScrollView, Modal, TextInput } from 'react-native';
 
-function MenuScreen({ navigation }: { navigation: any }) {
-  const menuItems = [
-    { name: 'Menu Item 1', price: 'R10.00' },
-    { name: 'Menu Item 2', price: 'R12.50' },
-    { name: 'Menu Item 3', price: 'R15.00' },
-    { name: 'Menu Item 4', price: 'R8.00' },
-    { name: 'Menu Item 5', price: 'R25.00' },
-    { name: 'Menu Item 6', price: 'R30.00' },
-    { name: 'Menu Item 7', price: 'R22.00' },
-    { name: 'Menu Item 8', price: 'R18.50' },
-    { name: 'Menu Item 9', price: 'R45.00' },
-    { name: 'Menu Item 10', price: 'R11.00' },
-    { name: 'Menu Item 11', price: 'R16.00' },
-    { name: 'Menu Item 12', price: 'R19.00' },
-    { name: 'Menu Item 13', price: 'R24.00' },
-    { name: 'Menu Item 14', price: 'R29.00' },
-    { name: 'Menu Item 15', price: 'R14.00' },
-    { name: 'Menu Item 16', price: 'R21.00' },
-    { name: 'Menu Item 17', price: 'R27.00' },
-    { name: 'Menu Item 18', price: 'R33.00' },
-    { name: 'Menu Item 19', price: 'R9.00' },
-    { name: 'Menu Item 20', price: 'R13.50' },
-  ];
+const initialMenuItems = [
+  { name: 'Menu Item 1', price: 'R10.00' },
+  { name: 'Menu Item 2', price: 'R12.50' },
+  { name: 'Menu Item 3', price: 'R15.00' },
+  { name: 'Menu Item 4', price: 'R8.00' },
+  { name: 'Menu Item 5', price: 'R25.00' },
+  { name: 'Menu Item 6', price: 'R30.00' },
+  { name: 'Menu Item 7', price: 'R22.00' },
+  { name: 'Menu Item 8', price: 'R18.50' },
+  { name: 'Menu Item 9', price: 'R45.00' },
+  { name: 'Menu Item 10', price: 'R11.00' },
+  { name: 'Menu Item 11', price: 'R16.00' },
+  { name: 'Menu Item 12', price: 'R19.00' },
+  { name: 'Menu Item 13', price: 'R24.00' },
+  { name: 'Menu Item 14', price: 'R29.00' },
+  { name: 'Menu Item 15', price: 'R14.00' },
+  { name: 'Menu Item 16', price: 'R21.00' },
+  { name: 'Menu Item 17', price: 'R27.00' },
+  { name: 'Menu Item 18', price: 'R33.00' },
+  { name: 'Menu Item 19', price: 'R9.00' },
+  { name: 'Menu Item 20', price: 'R13.50' },
+];
+
+function MenuScreen() {
+  const [menuItems, setMenuItems] = useState(initialMenuItems);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const [dishName, setDishName] = useState('');
+  const [description, setDescription] = useState('');
+  const [price, setPrice] = useState('');
+  const [course, setCourse] = useState<string | null>(null);
+  const [showCourseOptions, setShowCourseOptions] = useState(false);
+  const courses = ["Starters", "Mains", "Desserts"];
+
+  const handleAddItem = () => {
+    if (!dishName || !price) {
+      alert('Please enter a dish name and price.');
+      return;
+    }
+    const newItem = { name: dishName, price: `R${parseFloat(price).toFixed(2)}` };
+    setMenuItems([...menuItems, newItem]);
+    setDishName('');
+    setDescription('');
+    setPrice('');
+    setCourse(null);
+    setModalVisible(false);
+  };
 
   return (
     <View style={styles.container}>
@@ -34,6 +57,62 @@ function MenuScreen({ navigation }: { navigation: any }) {
         <View style={styles.divider} />
         <Text style={styles.itemCount}>{menuItems.length} Items</Text>
       </View>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalTitle}>Add New Item</Text>
+            
+            <Text style={styles.label}>Dish Name</Text>
+            <TextInput style={styles.input} value={dishName} onChangeText={setDishName} />
+
+            <Text style={styles.label}>Description</Text>
+            <TextInput style={styles.input} value={description} onChangeText={setDescription} />
+
+            <Text style={styles.label}>Select Course</Text>
+            <View>
+              <Pressable style={styles.input} onPress={() => setShowCourseOptions(!showCourseOptions)}>
+                <Text style={styles.inputText}>{course || 'Select course'}</Text>
+              </Pressable>
+              {showCourseOptions && (
+                <View style={styles.dropdown}>
+                  {courses.map((c, index) => (
+                    <Pressable
+                      key={index}
+                      style={styles.dropdownOption}
+                      onPress={() => { setCourse(c); setShowCourseOptions(false); }}
+                    >
+                      <Text style={styles.dropdownOptionText}>{c}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            <Text style={styles.label}>Price</Text>
+            <TextInput style={styles.input} value={price} onChangeText={setPrice} keyboardType="numeric" />
+
+            <View style={styles.modalButtonWrapper}>
+              <Pressable style={[styles.button, styles.modalButton]} onPress={handleAddItem}>
+                <Text style={styles.buttonText}>Add Item</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.button, styles.modalButton, styles.buttonClose]}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={[styles.buttonText, styles.textStyle]}>Cancel</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <View style={styles.scrollContainer}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -52,7 +131,7 @@ function MenuScreen({ navigation }: { navigation: any }) {
           <Pressable style={styles.button} onPress={() => {}}>
             <Text style={styles.buttonText}>Filter</Text>
           </Pressable>
-          <Pressable style={styles.button} onPress={() => navigation.navigate('AddItem')}>
+          <Pressable style={styles.button} onPress={() => setModalVisible(true)}>
             <Text style={styles.buttonText}>Add Item</Text>
           </Pressable>
         </View>
@@ -63,14 +142,7 @@ function MenuScreen({ navigation }: { navigation: any }) {
 }
 
 export default function App() {
-  const [route, setRoute] = useState<'Menu' | 'AddItem'>('Menu');
-
-  const navigation = {
-    navigate: (screen: 'Menu' | 'AddItem') => setRoute(screen),
-    goBack: () => setRoute('Menu'),
-  } as any;
-
-  return route === 'Menu' ? <MenuScreen navigation={navigation} /> : <AddItem navigation={navigation} />;
+  return <MenuScreen />;
 }
 
 const styles = StyleSheet.create({
@@ -146,4 +218,76 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 10,
   },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'green',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'stretch',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: '90%',
+  },
+  modalTitle: {
+    marginBottom: 15,
+    textAlign: 'center',
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  modalButtonWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 20,
+  },
+  modalButton: {
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  buttonClose: {
+    backgroundColor: '#a0a0a0',
+  },
+  textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  label: {
+    color: '#fff',
+    fontSize: 18,
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    fontSize: 16,
+    marginBottom: 20,
+    color: '#333',
+    justifyContent: 'center',
+  },
+  inputText: {
+    fontSize: 16,
+  },
+  dropdown: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginTop: -15,
+    marginBottom: 20,
+  },
+  dropdownOption: { padding: 10, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  dropdownOptionText: { fontSize: 16 },
 });

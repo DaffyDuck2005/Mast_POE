@@ -1,31 +1,35 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, Pressable, ScrollView, Modal, TextInput } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import FilterScreen from './Filter'; // Assuming Filter.tsx exports a default component
+import StarterScreen from './Starter';
+import MainsScreen from './Mains';
+import DessertScreen from './Dessert';
 
 const initialMenuItems = [
-  { name: 'Menu Item 1', price: 'R10.00' },
-  { name: 'Menu Item 2', price: 'R12.50' },
-  { name: 'Menu Item 3', price: 'R15.00' },
-  { name: 'Menu Item 4', price: 'R8.00' },
-  { name: 'Menu Item 5', price: 'R25.00' },
-  { name: 'Menu Item 6', price: 'R30.00' },
-  { name: 'Menu Item 7', price: 'R22.00' },
-  { name: 'Menu Item 8', price: 'R18.50' },
-  { name: 'Menu Item 9', price: 'R45.00' },
-  { name: 'Menu Item 10', price: 'R11.00' },
-  { name: 'Menu Item 11', price: 'R16.00' },
-  { name: 'Menu Item 12', price: 'R19.00' },
-  { name: 'Menu Item 13', price: 'R24.00' },
-  { name: 'Menu Item 14', price: 'R29.00' },
-  { name: 'Menu Item 15', price: 'R14.00' },
-  { name: 'Menu Item 16', price: 'R21.00' },
-  { name: 'Menu Item 17', price: 'R27.00' },
-  { name: 'Menu Item 18', price: 'R33.00' },
-  { name: 'Menu Item 19', price: 'R9.00' },
-  { name: 'Menu Item 20', price: 'R13.50' },
+  { name: 'Fish & Chips', price: 'R127.99' },
+  { name: 'Cheeseburger', price: 'R89.99' },
+  { name: 'Margherita Pizza', price: 'R75.00' },
+  { name: 'Caesar Salad', price: 'R65.00' },
+  { name: 'Pasta Primavera', price: 'R95.00' },
+  { name: 'Grilled Salmon', price: 'R150.00' },
+  { name: 'Chocolate Cake', price: 'R45.00' },
+  { name: 'Tiramisu', price: 'R55.00' },
+  { name: 'Cheesecake', price: 'R60.00' },
+  { name: 'Lentil Soup', price: 'R19.00' },
+  { name: 'Garlic Bread', price: 'R24.00' },
+  { name: 'Bruschetta', price: 'R29.00' },
+  { name: 'Caprese Salad', price: 'R14.00' },
+  { name: 'Stuffed Peppers', price: 'R21.00' },
+  { name: 'Mushroom Risotto', price: 'R27.00' },
+  { name: 'Chicken Curry', price: 'R87.00' },
+  { name: 'Chicken Fried Rice', price: 'R105.00' },
+  { name: 'Lamb Chops', price: 'R135.00' },
 ];
 
-function MenuScreen() {
+function MenuScreen({ navigation }: { navigation: any }) {
   const [menuItems, setMenuItems] = useState(initialMenuItems);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -128,7 +132,12 @@ function MenuScreen() {
       <View style={styles.bottomContainer}>
         <View style={styles.divider} />
         <View style={styles.buttonWrapper}>
-          <Pressable style={styles.button} onPress={() => {}}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.button,
+              { opacity: pressed ? 0.7 : 1 },
+            ]}
+            onPress={() => navigation.navigate('Filter')}>
             <Text style={styles.buttonText}>Filter</Text>
           </Pressable>
           <Pressable style={styles.button} onPress={() => setModalVisible(true)}>
@@ -141,8 +150,20 @@ function MenuScreen() {
   );
 }
 
+const Stack = createNativeStackNavigator();
+
 export default function App() {
-  return <MenuScreen />;
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Menu" component={MenuScreen} />
+        <Stack.Screen name="Filter" component={FilterScreen} />
+        <Stack.Screen name="Starter" component={StarterScreen} />
+        <Stack.Screen name="Mains" component={MainsScreen} />
+        <Stack.Screen name="Dessert" component={DessertScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -204,11 +225,11 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     color: '#fff',
-    fontSize: 22,
+    fontSize: 18,
   },
   menuItemPrice: {
     color: '#fff',
-    fontSize: 22,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   scrollContainer: {

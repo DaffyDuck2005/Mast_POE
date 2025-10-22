@@ -12,7 +12,7 @@ export default function Starter({ navigation }: { navigation: any }) {
       {/* This is where your starter menu items will go */}
       <View style={styles.mainContentArea}>
         <Text style={{ color: '#fff', fontSize: 16 }}>
-          
+          Starter menu items will be displayed here.
         </Text>
       </View>
 

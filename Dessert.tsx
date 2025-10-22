@@ -1,19 +1,50 @@
-import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useContext, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { MenuContext, MenuItem } from './MenuContext';
 
 export default function Dessert({ navigation }: { navigation: any }) {
+  const { items } = useContext(MenuContext);
+  const desserts = items.filter((i) => i.course === 'Desserts');
+  const [showDescriptionOverlay, setShowDescriptionOverlay] = useState(false);
+  const [selectedItemDescription, setSelectedItemDescription] = useState<string | null>(null);
+
+  const handleItemTap = (item: MenuItem) => {
+    if (showDescriptionOverlay && selectedItemDescription === item.description) {
+      setShowDescriptionOverlay(false);
+      setSelectedItemDescription(null);
+    } else {
+      setSelectedItemDescription(item.description ?? 'No description available.');
+      setShowDescriptionOverlay(true);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.topContainer}>
         <Text style={styles.title}>Desserts</Text>
         <View style={styles.divider} />
       </View>
-
-      {/* This is where your dessert menu items will go */}
-      <View style={styles.mainContentArea}>
-        <Text style={{ color: '#fff', fontSize: 16 }}>
-          Dessert menu items will be displayed here.
-        </Text>
+      <View style={styles.scrollContainer}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {desserts.map((item, index) => (
+            <Pressable key={index} onPress={() => handleItemTap(item)}>
+              <View style={styles.menuItemContainer}>
+                <Text style={styles.menuItemText}>{item.name}</Text>
+                <Text style={styles.menuItemPrice}>{item.price}</Text>
+              </View>
+            </Pressable>
+          ))}
+        </ScrollView>
+        {showDescriptionOverlay && (
+          <Pressable
+            style={styles.fullDescriptionOverlay}
+            onPress={() => {
+              setShowDescriptionOverlay(false);
+              setSelectedItemDescription(null);
+            }}>
+            <Text style={styles.descriptionText}>{selectedItemDescription}</Text>
+          </Pressable>
+        )}
       </View>
 
       <View style={styles.bottomContainer}>
@@ -40,12 +71,12 @@ const styles = StyleSheet.create({
   },
   topContainer: {
     alignItems: 'center',
-    paddingTop: 80, // Adjust as needed for status bar/header
+    paddingTop: 80,
   },
   title: {
-    color: '#fff',
-    fontSize: 30, // Consistent with App.tsx title
+    fontSize: 30,
     fontWeight: 'bold',
+    color: '#fff',
     marginBottom: 20,
   },
   divider: {
@@ -55,31 +86,67 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 20,
   },
-  mainContentArea: {
-    flex: 1, // Takes up available space between top and bottom
+  scrollContainer: {
+    flex: 1,
+    marginHorizontal: 10,
+  },
+  scrollContent: {
+    paddingBottom: 10,
+  },
+  menuItemContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingVertical: 15,
     paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  menuItemText: {
+    color: '#fff',
+    fontSize: 18,
+  },
+  menuItemPrice: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   bottomContainer: {
-    paddingBottom: 40, // Consistent with App.tsx
-    backgroundColor: 'rgba(255,255,255,0.03)', // Consistent with App.tsx
+    paddingBottom: 40,
+    backgroundColor: 'rgba(255,255,255,0.03)',
   },
   buttonWrapper: {
     paddingHorizontal: 20,
-    justifyContent: 'center', // Center the single button
+    justifyContent: 'center',
   },
   button: {
     backgroundColor: '#fff',
     borderWidth: 0,
     borderRadius: 8,
-    paddingVertical: 12, // Consistent with App.tsx
+    paddingVertical: 12,
     alignItems: 'center',
     paddingHorizontal: 20,
   },
   buttonText: {
     color: 'green',
-    fontSize: 20, // Consistent with App.tsx
-    fontWeight: '600', // Consistent with App.tsx
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  fullDescriptionOverlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  descriptionText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });

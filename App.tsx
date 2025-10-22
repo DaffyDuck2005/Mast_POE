@@ -1,36 +1,18 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { StyleSheet, Text, View, Pressable, ScrollView, Modal, TextInput } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import FilterScreen from './Filter'; // Assuming Filter.tsx exports a default component
 import StarterScreen from './Starter';
 import MainsScreen from './Mains';
 import DessertScreen from './Dessert';
+import { MenuContext, MenuProvider, MenuItem } from './MenuContext';
 
-const initialMenuItems = [
-  { name: 'Fish & Chips', price: 'R127.99' },
-  { name: 'Cheeseburger', price: 'R89.99' },
-  { name: 'Margherita Pizza', price: 'R75.00' },
-  { name: 'Caesar Salad', price: 'R65.00' },
-  { name: 'Pasta Primavera', price: 'R95.00' },
-  { name: 'Grilled Salmon', price: 'R150.00' },
-  { name: 'Chocolate Cake', price: 'R45.00' },
-  { name: 'Tiramisu', price: 'R55.00' },
-  { name: 'Cheesecake', price: 'R60.00' },
-  { name: 'Lentil Soup', price: 'R19.00' },
-  { name: 'Garlic Bread', price: 'R24.00' },
-  { name: 'Bruschetta', price: 'R29.00' },
-  { name: 'Caprese Salad', price: 'R14.00' },
-  { name: 'Stuffed Peppers', price: 'R21.00' },
-  { name: 'Mushroom Risotto', price: 'R27.00' },
-  { name: 'Chicken Curry', price: 'R87.00' },
-  { name: 'Chicken Fried Rice', price: 'R105.00' },
-  { name: 'Lamb Chops', price: 'R135.00' },
-];
+// MenuItem type imported from menuData.ts
 
 function MenuScreen({ navigation }: { navigation: any }) {
-  const [menuItems, setMenuItems] = useState(initialMenuItems);
+  const { items: menuItems, addItem } = useContext(MenuContext);
   const [modalVisible, setModalVisible] = useState(false);
 
   const [dishName, setDishName] = useState('');
@@ -38,20 +20,52 @@ function MenuScreen({ navigation }: { navigation: any }) {
   const [price, setPrice] = useState('');
   const [course, setCourse] = useState<string | null>(null);
   const [showCourseOptions, setShowCourseOptions] = useState(false);
+  const [showDescriptionOverlay, setShowDescriptionOverlay] = useState(false);
+  const [selectedItemDescription, setSelectedItemDescription] = useState<string | null>(null);
   const courses = ["Starters", "Mains", "Desserts"];
 
   const handleAddItem = () => {
-    if (!dishName || !price) {
-      alert('Please enter a dish name and price.');
+    let message = 'Please fill in required fields:';
+    let hasError = false;
+    
+    if (!dishName.trim()) {
+      message += '\n- Dish Name';
+      hasError = true;
+    }
+    if (!description.trim()) {
+      message += '\n- Description';
+      hasError = true;
+    }
+    if (!price.trim() || isNaN(parseFloat(price))) {
+      message += '\n- Price (must be a valid number)';
+      hasError = true;
+    }
+    if (!course) {
+      message += '\n- Course';
+      hasError = true;
+    }
+
+    if (hasError) {
+      alert(message);
       return;
     }
-    const newItem = { name: dishName, price: `R${parseFloat(price).toFixed(2)}` };
-    setMenuItems([...menuItems, newItem]);
+  const newItem: MenuItem = { name: dishName, price: `R${parseFloat(price).toFixed(2)}`, description: description, course: course as MenuItem['course'] };
+    addItem(newItem);
     setDishName('');
     setDescription('');
     setPrice('');
     setCourse(null);
     setModalVisible(false);
+  };
+
+  const handleItemTap = (item: MenuItem) => {
+    if (showDescriptionOverlay && selectedItemDescription === item.description) {
+      setShowDescriptionOverlay(false);
+      setSelectedItemDescription(null);
+    } else {
+      setSelectedItemDescription(item.description ?? 'No description available.');
+      setShowDescriptionOverlay(true);
+    }
   };
 
   return (
@@ -121,12 +135,24 @@ function MenuScreen({ navigation }: { navigation: any }) {
       <View style={styles.scrollContainer}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
         {menuItems.map((item, index) => (
-          <View key={index} style={styles.menuItemContainer}>
-            <Text style={styles.menuItemText}>{item.name}</Text>
-            <Text style={styles.menuItemPrice}>{item.price}</Text>
-          </View>
+          <Pressable key={index} onPress={() => handleItemTap(item)}>
+            <View style={styles.menuItemContainer}>
+              <Text style={styles.menuItemText}>{item.name}</Text>
+              <Text style={styles.menuItemPrice}>{item.price}</Text>
+            </View>
+          </Pressable>
         ))}
         </ScrollView>
+        {showDescriptionOverlay && (
+          <Pressable
+            style={styles.fullDescriptionOverlay}
+            onPress={() => {
+              setShowDescriptionOverlay(false);
+              setSelectedItemDescription(null);
+            }}>
+            <Text style={styles.descriptionText}>{selectedItemDescription}</Text>
+          </Pressable>
+        )}
       </View>
 
       <View style={styles.bottomContainer}>
@@ -150,19 +176,21 @@ function MenuScreen({ navigation }: { navigation: any }) {
   );
 }
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Menu" component={MenuScreen} />
-        <Stack.Screen name="Filter" component={FilterScreen} />
-        <Stack.Screen name="Starter" component={StarterScreen} />
-        <Stack.Screen name="Mains" component={MainsScreen} />
-        <Stack.Screen name="Dessert" component={DessertScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <MenuProvider>
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Menu" component={MenuScreen} />
+          <Stack.Screen name="Filter" component={FilterScreen} />
+          <Stack.Screen name="Starter" component={StarterScreen} />
+          <Stack.Screen name="Mains" component={MainsScreen} />
+          <Stack.Screen name="Dessert" component={DessertScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </MenuProvider>
   );
 }
 
@@ -223,6 +251,31 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 20,
   },
+  fullDescriptionOverlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  descriptionOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
+    borderRadius: 8,
+  },
+  descriptionText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
   menuItemText: {
     color: '#fff',
     fontSize: 18,
@@ -238,6 +291,23 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 10,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 16,
+  },
+  name: {
+    color: '#fff',
+    fontSize: 18,
+  },
+  price: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
   },
   modalContainer: {
     flex: 1,

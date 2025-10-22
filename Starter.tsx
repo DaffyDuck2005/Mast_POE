@@ -1,19 +1,51 @@
-import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Pressable, StyleSheet, ScrollView} from 'react-native';
+import { useContext } from 'react';
+import { MenuContext, MenuItem } from './MenuContext';
 
 export default function Starter({ navigation }: { navigation: any }) {
+  const { items } = useContext(MenuContext);
+  const starters = items.filter((i) => i.course === 'Starters');
+  const [showDescriptionOverlay, setShowDescriptionOverlay] = useState(false);
+  const [selectedItemDescription, setSelectedItemDescription] = useState<string | null>(null);
+
+  const handleItemTap = (item: MenuItem) => {
+    if (showDescriptionOverlay && selectedItemDescription === item.description) {
+      setShowDescriptionOverlay(false);
+      setSelectedItemDescription(null);
+    } else {
+      setSelectedItemDescription(item.description ?? 'No description available.');
+      setShowDescriptionOverlay(true);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.topContainer}>
         <Text style={styles.title}>Starters</Text>
         <View style={styles.divider} />
       </View>
-
-      {/* This is where your starter menu items will go */}
-      <View style={styles.mainContentArea}>
-        <Text style={{ color: '#fff', fontSize: 16 }}>
-          Starter menu items will be displayed here.
-        </Text>
+      <View style={styles.scrollContainer}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {starters.map((item, index) => (
+            <Pressable key={index} onPress={() => handleItemTap(item)}>
+              <View style={styles.menuItemContainer}>
+                <Text style={styles.menuItemText}>{item.name}</Text>
+                <Text style={styles.menuItemPrice}>{item.price}</Text>
+              </View>
+            </Pressable>
+          ))}
+        </ScrollView>
+        {showDescriptionOverlay && (
+          <Pressable
+            style={styles.fullDescriptionOverlay}
+            onPress={() => {
+              setShowDescriptionOverlay(false);
+              setSelectedItemDescription(null);
+            }}>
+            <Text style={styles.descriptionText}>{selectedItemDescription}</Text>
+          </Pressable>
+        )}
       </View>
 
       <View style={styles.bottomContainer}>
@@ -81,5 +113,47 @@ const styles = StyleSheet.create({
     color: 'green',
     fontSize: 20, // Consistent with App.tsx
     fontWeight: '600', // Consistent with App.tsx
+  },
+  scrollContainer: {
+    flex: 1, // Takes up available space
+    marginHorizontal: 10,
+  },
+  scrollContent: {
+    paddingBottom: 10,
+  },
+  menuItemContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)', // Light divider for items
+  },
+  menuItemText: {
+    color: '#fff',
+    fontSize: 18,
+  },
+  menuItemPrice: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  fullDescriptionOverlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  descriptionText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });
